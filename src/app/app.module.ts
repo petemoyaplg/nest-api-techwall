@@ -8,12 +8,16 @@ import { FirstMiddleware } from 'src/middlewares/first.middleware';
 import { logger } from 'src/middlewares/Logger.middleware';
 import { TodoModule } from 'src/todo/todo.module';
 import * as dotenv from 'dotenv';
+import { CvModule } from 'src/cv/cv.module';
+import { UserModule } from 'src/user/user.module';
 
 dotenv.config();
 
 @Module({
   imports: [
     TodoModule,
+    CvModule,
+    UserModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
