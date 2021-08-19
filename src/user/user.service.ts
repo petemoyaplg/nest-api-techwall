@@ -36,7 +36,7 @@ export class UserService {
     const { username, password } = credentials;
     const user = this.userRepository
       .createQueryBuilder('user')
-      .where('user.username = :username OR user.password = :password')
+      .where('user.username = :username or user.password = :password')
       .setParameters({ username, password })
       .getOne();
 
@@ -48,12 +48,13 @@ export class UserService {
     if (hashedPassword === (await user).password) {
       const payload = {
         id: (await user).id,
+        username: (await user).username,
         email: (await user).email,
         password: (await user).password,
         role: (await user).role,
       };
-      const jwt = await this.jwtService.sign(payload);
-      return { acces_token: jwt };
+
+      return { acces_token: this.jwtService.sign(payload) };
     } else {
       throw new NotFoundException("L'email ou le password est incorecte");
     }

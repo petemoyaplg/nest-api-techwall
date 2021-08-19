@@ -30,6 +30,7 @@ export class CvEntity extends TimestampEntities {
   url: string;
 
   @ManyToOne((type) => UserEntity, (user) => user.cvs, {
+    eager: true,
     cascade: ['insert', 'update'],
     nullable: true,
   })

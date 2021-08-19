@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserRole } from 'src/enum/User.Role';
+import { UserEntity } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { AddCvDto, UpdateCvDto } from './dto/cv.dto';
 import { CvEntity } from './entities/cv.entity';
@@ -11,8 +17,10 @@ export class CvService {
     private cvRepository: Repository<CvEntity>,
   ) {}
 
-  async addCv(cv: AddCvDto): Promise<CvEntity> {
-    return await this.cvRepository.save(cv);
+  async addCv(cv: AddCvDto, user: any): Promise<CvEntity> {
+    const newCv = this.cvRepository.create(cv);
+    newCv.user = user;
+    return await this.cvRepository.save(newCv);
   }
 
   async updateCv(id: number, cv: UpdateCvDto): Promise<CvEntity> {
@@ -21,26 +29,44 @@ export class CvService {
     return await this.cvRepository.save(newCv);
   }
 
-  async findAll(): Promise<CvEntity[]> {
-    return await this.cvRepository.find();
+  async findAll(user): Promise<CvEntity[]> {
+    if (user.role === UserRole.ADMIN) return await this.cvRepository.find();
+    return await this.cvRepository.find({ user });
   }
 
-  async findOne(id: number): Promise<CvEntity> {
-    return await this.cvRepository.findOne(id);
+  async findOne(id: number, user): Promise<CvEntity> {
+    const cv = await this.cvRepository.findOne(id);
+    if (!cv) throw new NotFoundException(`le cv d'id ${id} n'existe pas`);
+    if (user.role === UserRole.ADMIN || cv.user.id === user.id) {
+      return cv;
+    }
+    throw new UnauthorizedException(
+      "Cette personne n'a pas l'authorisation requise",
+    );
   }
 
-  async removeCv(id: number): Promise<CvEntity> {
+  async removeCv(id: number, user): Promise<CvEntity> {
     const cvRemove = await this.cvRepository.findOne(id);
     if (!cvRemove)
-      throw new NotFoundException(`la personne d'id ${id} n'existe pas `);
-    return await this.cvRepository.remove(cvRemove);
+      throw new NotFoundException(`le cv d'id ${id} n'existe pas `);
+    if (user.role === UserRole.ADMIN || cvRemove.user.id === user.id) {
+      return await this.cvRepository.remove(cvRemove);
+    }
+    throw new UnauthorizedException(
+      "Cette personne n'a pas l'authorisation requise",
+    );
   }
 
-  async deleteCv(id: number): Promise<any> {
-    const cvelete = await this.cvRepository.findOne(id);
-    if (!cvelete)
-      throw new NotFoundException(`la personne d'id ${id} n'existe pas `);
-    return await this.cvRepository.delete(id);
+  async deleteCv(id: number, user): Promise<any> {
+    const cvdelete = await this.cvRepository.findOne(id);
+    if (!cvdelete)
+      throw new NotFoundException(`le cv d'id ${id} n'existe pas `);
+    if (user.role === UserRole.ADMIN || cvdelete.user.id === user.id) {
+      return await this.cvRepository.delete(id);
+    }
+    throw new UnauthorizedException(
+      "Cette personne n'a pas l'authorisation requise",
+    );
   }
 
   async softRemoveCv(id: number): Promise<void> {

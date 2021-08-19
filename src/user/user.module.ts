@@ -6,6 +6,7 @@ import { UserEntity } from './entities/user.entity';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import * as dotenv from 'dotenv';
+import { JwtStrategy } from './strategy/passportJwt.strategy';
 
 dotenv.config();
 
@@ -19,6 +20,6 @@ dotenv.config();
     }),
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, JwtStrategy],
 })
 export class UserModule {}

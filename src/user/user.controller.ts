@@ -7,7 +7,7 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('/login')
+  @Post('/login')
   async login(@Body() credentiels: LoginCredentialDto) {
     return await this.userService.login(credentiels);
   }
